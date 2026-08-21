@@ -4,12 +4,15 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Shiva Library - QR Code Attendance System</title>
+    <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
+    <!-- QRCode.js CDN -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    <!-- HTML5-QRCode Scanner CDN -->
     <script src="https://unpkg.com/html5-qrcode"></script>
 </head>
 <body class="bg-gray-100 font-sans min-h-screen">
-
+    <!-- Header Navigation -->
     <nav class="bg-indigo-700 text-white p-4 shadow-md flex justify-between items-center px-6">
         <h1 class="text-2xl font-bold tracking-wide">📚 Shiva Library</h1>
         <div class="space-x-2">
@@ -19,11 +22,11 @@
     </nav>
 
     <div class="max-w-6xl mx-auto p-6">
-
+        <!-- ADMIN PANEL SECTION -->
         <div id="adminPanel" class="space-y-6">
             <h2 class="text-xl font-bold text-gray-800">Admin Dashboard & Attendance Sheet</h2>
-
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <!-- Add Student Form -->
                 <div class="bg-white p-6 rounded-lg shadow">
                     <h3 class="text-lg font-semibold mb-4 text-indigo-700">Add New Student</h3>
                     <form id="addStudentForm" class="space-y-3">
@@ -34,6 +37,7 @@
                     </form>
                 </div>
 
+                <!-- QR Scanner Section -->
                 <div class="bg-white p-6 rounded-lg shadow">
                     <h3 class="text-lg font-semibold mb-2 text-indigo-700">Scan QR Code for Attendance</h3>
                     <div id="reader" class="w-full"></div>
@@ -41,6 +45,7 @@
                 </div>
             </div>
 
+            <!-- Attendance Sheet Table -->
             <div class="bg-white p-6 rounded-lg shadow">
                 <h3 class="text-lg font-semibold mb-4 text-indigo-700">Attendance Sheet</h3>
                 <div class="overflow-x-auto">
@@ -60,6 +65,7 @@
             </div>
         </div>
 
+        <!-- STUDENT LOGIN SECTION -->
         <div id="loginPanel" class="hidden max-w-md mx-auto bg-white p-6 rounded-lg shadow space-y-4">
             <h2 class="text-xl font-bold text-center text-indigo-700">Student Portal Login</h2>
             <input type="text" id="loginId" placeholder="Student ID" class="w-full p-2 border rounded">
@@ -68,6 +74,7 @@
             <p id="loginErr" class="text-red-500 text-sm text-center"></p>
         </div>
 
+        <!-- STUDENT DASHBOARD SECTION -->
         <div id="studentDashboard" class="hidden space-y-6">
             <div class="bg-white p-6 rounded-lg shadow flex justify-between items-center">
                 <div>
@@ -81,6 +88,7 @@
                 </div>
             </div>
 
+            <!-- Personal Attendance Logs -->
             <div class="bg-white p-6 rounded-lg shadow">
                 <h3 class="text-lg font-semibold mb-4 text-indigo-700">My Attendance History</h3>
                 <div class="overflow-x-auto">
@@ -97,7 +105,6 @@
                 </div>
             </div>
         </div>
-
     </div>
 
     <script>
