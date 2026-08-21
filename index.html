@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Shiva Library - QR Code Attendance System</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    <script src="https://unpkg.com/html5-qrcode"></script>
+</head>
+<body class="bg-gray-100 font-sans min-h-screen">
+
+    <nav class="bg-indigo-700 text-white p-4 shadow-md flex justify-between items-center px-6">
+        <h1 class="text-2xl font-bold tracking-wide">📚 Shiva Library</h1>
+        <div class="space-x-2">
+            <button onclick="switchTab('admin')" class="bg-indigo-600 hover:bg-indigo-800 px-4 py-2 rounded text-sm font-semibold">Admin Panel</button>
+            <button onclick="switchTab('login')" class="bg-indigo-600 hover:bg-indigo-800 px-4 py-2 rounded text-sm font-semibold">Student Login</button>
+        </div>
+    </nav>
+
+    <div class="max-w-6xl mx-auto p-6">
+
+        <div id="adminPanel" class="space-y-6">
+            <h2 class="text-xl font-bold text-gray-800">Admin Dashboard & Attendance Sheet</h2>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div class="bg-white p-6 rounded-lg shadow">
+                    <h3 class="text-lg font-semibold mb-4 text-indigo-700">Add New Student</h3>
+                    <form id="addStudentForm" class="space-y-3">
+                        <input type="text" id="stuId" placeholder="Student ID (e.g. STU101)" class="w-full p-2 border rounded" required>
+                        <input type="text" id="stuName" placeholder="Full Name" class="w-full p-2 border rounded" required>
+                        <input type="password" id="stuPass" placeholder="Set Password for Login" class="w-full p-2 border rounded" required>
+                        <button type="submit" class="w-full bg-indigo-600 text-white py-2 rounded font-semibold hover:bg-indigo-700">Register & Generate QR</button>
+                    </form>
+                </div>
+
+                <div class="bg-white p-6 rounded-lg shadow">
+                    <h3 class="text-lg font-semibold mb-2 text-indigo-700">Scan QR Code for Attendance</h3>
+                    <div id="reader" class="w-full"></div>
+                    <p id="scanMsg" class="mt-2 text-center text-sm font-medium text-green-600"></p>
+                </div>
+            </div>
+
+            <div class="bg-white p-6 rounded-lg shadow">
+                <h3 class="text-lg font-semibold mb-4 text-indigo-700">Attendance Sheet</h3>
+                <div class="overflow-x-auto">
+                    <table class="w-full border-collapse border border-gray-200">
+                        <thead>
+                            <tr class="bg-gray-100 text-left">
+                                <th class="p-2 border">Student ID</th>
+                                <th class="p-2 border">Name</th>
+                                <th class="p-2 border">Date</th>
+                                <th class="p-2 border">Time</th>
+                                <th class="p-2 border">Status</th>
+                            </tr>
+                        </thead>
+                        <tbody id="attendanceTable"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <div id="loginPanel" class="hidden max-w-md mx-auto bg-white p-6 rounded-lg shadow space-y-4">
+            <h2 class="text-xl font-bold text-center text-indigo-700">Student Portal Login</h2>
+            <input type="text" id="loginId" placeholder="Student ID" class="w-full p-2 border rounded">
+            <input type="password" id="loginPass" placeholder="Password" class="w-full p-2 border rounded">
+            <button onclick="studentLogin()" class="w-full bg-indigo-600 text-white py-2 rounded font-semibold hover:bg-indigo-700">Login</button>
+            <p id="loginErr" class="text-red-500 text-sm text-center"></p>
+        </div>
+
+        <div id="studentDashboard" class="hidden space-y-6">
+            <div class="bg-white p-6 rounded-lg shadow flex justify-between items-center">
+                <div>
+                    <h2 class="text-2xl font-bold text-indigo-700" id="dashName">Welcome!</h2>
+                    <p class="text-gray-600">ID: <span id="dashId"></span></p>
+                    <button onclick="switchTab('login')" class="mt-4 bg-red-500 text-white px-3 py-1 rounded text-sm">Logout</button>
+                </div>
+                <div class="text-center">
+                    <p class="text-sm font-semibold mb-1">Your Attendance QR</p>
+                    <div id="dashQr" class="border p-2 bg-gray-50 rounded"></div>
+                </div>
+            </div>
+
+            <div class="bg-white p-6 rounded-lg shadow">
+                <h3 class="text-lg font-semibold mb-4 text-indigo-700">My Attendance History</h3>
+                <div class="overflow-x-auto">
+                    <table class="w-full border-collapse border border-gray-200">
+                        <thead>
+                            <tr class="bg-gray-100 text-left">
+                                <th class="p-2 border">Date</th>
+                                <th class="p-2 border">Time</th>
+                                <th class="p-2 border">Status</th>
+                            </tr>
+                        </thead>
+                        <tbody id="personalTable"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        let students = JSON.parse(localStorage.getItem("shiva_students")) || [];
+        let attendance = JSON.parse(localStorage.getItem("shiva_attendance")) || [];
+
+        function switchTab(tab) {
+            document.getElementById("adminPanel").classList.add("hidden");
+            document.getElementById("loginPanel").classList.add("hidden");
+            document.getElementById("studentDashboard").classList.add("hidden");
+
+            if (tab === 'admin') document.getElementById("adminPanel").classList.remove("hidden");
+            if (tab === 'login') document.getElementById("loginPanel").classList.remove("hidden");
+            if (tab === 'dashboard') document.getElementById("studentDashboard").classList.remove("hidden");
+        }
+
+        document.getElementById("addStudentForm").addEventListener("submit", function(e) {
+            e.preventDefault();
+            const id = document.getElementById("stuId").value.trim();
+            const name = document.getElementById("stuName").value.trim();
+            const pass = document.getElementById("stuPass").value.trim();
+
+            if (students.find(s => s.id === id)) {
+                alert("Student ID already exists!");
+                return;
+            }
+
+            students.push({ id, name, pass });
+            localStorage.setItem("shiva_students", JSON.stringify(students));
+            alert("Student Registered Successfully!");
+            this.reset();
+        });
+
+        function markAttendance(studentId) {
+            const student = students.find(s => s.id === studentId);
+            if (!student) {
+                document.getElementById("scanMsg").innerText = "Invalid Student QR Code!";
+                document.getElementById("scanMsg").className = "mt-2 text-center text-sm font-medium text-red-600";
+                return;
+            }
+
+            const now = new Date();
+            const dateStr = now.toISOString().split('T')[0];
+            const timeStr = now.toLocaleTimeString();
+
+            const alreadyMarked = attendance.find(a => a.id === studentId && a.date === dateStr);
+            if (alreadyMarked) {
+                document.getElementById("scanMsg").innerText = `Already Present Today: ${student.name}`;
+                document.getElementById("scanMsg").className = "mt-2 text-center text-sm font-medium text-yellow-600";
+                return;
+            }
+
+            attendance.push({ id: studentId, name: student.name, date: dateStr, time: timeStr, status: "Present" });
+            localStorage.setItem("shiva_attendance", JSON.stringify(attendance));
+            renderAttendance();
+
+            document.getElementById("scanMsg").innerText = `Attendance Marked for ${student.name}!`;
+            document.getElementById("scanMsg").className = "mt-2 text-center text-sm font-medium text-green-600";
+        }
+
+        function renderAttendance() {
+            const tbody = document.getElementById("attendanceTable");
+            tbody.innerHTML = "";
+            attendance.forEach(log => {
+                tbody.innerHTML += `
+                    <tr>
+                        <td class="p-2 border">${log.id}</td>
+                        <td class="p-2 border">${log.name}</td>
+                        <td class="p-2 border">${log.date}</td>
+                        <td class="p-2 border">${log.time}</td>
+                        <td class="p-2 border text-green-600 font-bold">${log.status}</td>
+                    </tr>
+                `;
+            });
+        }
+
+        function studentLogin() {
+            const id = document.getElementById("loginId").value.trim();
+            const pass = document.getElementById("loginPass").value.trim();
+
+            const student = students.find(s => s.id === id && s.pass === pass);
+            if (!student) {
+                document.getElementById("loginErr").innerText = "Invalid ID or Password!";
+                return;
+            }
+
+            document.getElementById("loginErr").innerText = "";
+            document.getElementById("dashName").innerText = student.name;
+            document.getElementById("dashId").innerText = student.id;
+
+            document.getElementById("dashQr").innerHTML = "";
+            new QRCode(document.getElementById("dashQr"), {
+                text: student.id,
+                width: 128,
+                height: 128
+            });
+
+            const personalBody = document.getElementById("personalTable");
+            personalBody.innerHTML = "";
+            const myLogs = attendance.filter(a => a.id === student.id);
+            
+            myLogs.forEach(log => {
+                personalBody.innerHTML += `
+                    <tr>
+                        <td class="p-2 border">${log.date}</td>
+                        <td class="p-2 border">${log.time}</td>
+                        <td class="p-2 border text-green-600 font-bold">${log.status}</td>
+                    </tr>
+                `;
+            });
+
+            switchTab('dashboard');
+        }
+
+        const html5QrcodeScanner = new Html5QrcodeScanner("reader", { fps: 10, qrbox: 250 });
+        html5QrcodeScanner.render((decodedText) => markAttendance(decodedText));
+
+        renderAttendance();
+    </script>
+</body>
+</html>
